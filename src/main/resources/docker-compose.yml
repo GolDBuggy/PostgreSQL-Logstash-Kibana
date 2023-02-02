@@ -1,0 +1,89 @@
+version: "3.7"
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.3.3
+    container_name: elasticsearch
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      -
+    networks:
+      - elastic
+
+
+
+  kibana:
+      container_name: kibana
+      image: docker.elastic.co/kibana/kibana:8.3.3
+      environment:
+        ELASTICSEARCH_URL: http://elasticsearch:9200
+        ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
+      ports:
+        - 5601:5601
+      depends_on:
+        - elasticsearch
+      networks:
+        - elastic
+
+
+  logtash:
+      image: docker.elastic.co/logstash/logstash:8.3.3
+      container_name: logtash
+      volumes:
+        - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+        - ./logstash/pipeline:/usr/share/logstash/pipeline
+
+      ports:
+        - "5044:5044"
+        - "5000:5000/tcp"
+        - "9600:9600"
+      environment:
+        LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+      networks:
+        - elastic
+      depends_on:
+        - elasticsearch
+
+
+  postgresqldb:
+    image: 'postgres:13.1-alpine'
+    container_name: postgresqldb
+    ports:
+      - "2022:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=12345
+
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: '123456'
+      # Password for root access
+      MYSQL_ROOT_PASSWORD: '123456'
+
+    ports:
+      - '3306:3306'
+    volumes:
+      - my-db:/var/lib/mysql
+
+
+networks:
+    elastic:
+      driver: bridge
+
+
+volumes:
+  my-db:
+  elasticsearch_data:
+      driver: local
+
+

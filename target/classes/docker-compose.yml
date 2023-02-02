@@ -12,6 +12,7 @@ services:
       - "9200:9200"
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
+      -
     networks:
       - elastic
 
@@ -35,8 +36,8 @@ services:
       image: docker.elastic.co/logstash/logstash:8.3.3
       container_name: logtash
       volumes:
-        - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
-        - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+        - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+        - ./logstash/pipeline:/usr/share/logstash/pipeline
 
       ports:
         - "5044:5044"
@@ -59,21 +60,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=12345
 
-  db:
-    image: mysql:5.7
-    restart: always
-    environment:
-      MYSQL_DATABASE: 'db'
-      MYSQL_USER: 'user'
-      MYSQL_PASSWORD: '123456'
-      # Password for root access
-      MYSQL_ROOT_PASSWORD: '123456'
-    ports:
-      - '3306:3306'
-    expose:
-      - '3306'
-    volumes:
-      - my-db:/var/lib/mysql
+
 
 
 networks:
@@ -82,7 +69,6 @@ networks:
 
 
 volumes:
-  my-db:
   elasticsearch_data:
       driver: local
 
